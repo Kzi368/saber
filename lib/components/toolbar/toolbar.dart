@@ -109,6 +109,7 @@ class _ToolbarState extends State<Toolbar> {
   Keybinding? _ctrlShiftS;
   Keybinding? _f11;
   Keybinding? _ctrlV;
+  final List<Keybinding> _colorKeybindings = [];
   void _assignKeybindings() {
     _ctrlF = Keybinding([
       KeyCode.ctrl,
@@ -139,6 +140,67 @@ class _ToolbarState extends State<Toolbar> {
     Keybinder.bind(_ctrlShiftS!, toggleExportBar);
     Keybinder.bind(_f11!, toggleFullscreen);
     Keybinder.bind(_ctrlV!, widget.paste);
+    _assignColorKeybindings();
+  }
+
+  void _assignColorKeybindings() {
+    const int maxKeys = 5;
+
+    final pastelNames = <String>[
+      t.editor.colors.pastelRed,
+      t.editor.colors.pastelOrange,
+      t.editor.colors.pastelYellow,
+      t.editor.colors.pastelGreen,
+      t.editor.colors.pastelCyan,
+      t.editor.colors.pastelBlue,
+      t.editor.colors.pastelPurple,
+      t.editor.colors.pastelPink,
+    ];
+
+    final List<Color> selectedColors = [];
+    for (final name in pastelNames) {
+      try {
+        final entry = ColorBar.normalColorOptions
+            .firstWhere((named) => named.name == name);
+        selectedColors.add(entry.color);
+      } on StateError {
+      }
+      if (selectedColors.length >= maxKeys) break;
+    }
+
+    final presets = ColorBar.colorPresets;
+    for (final named in presets) {
+      if (selectedColors.length >= maxKeys) break;
+      if (!selectedColors.contains(named.color)) {
+        selectedColors.add(named.color);
+      }
+    }
+
+    if (selectedColors.isEmpty) return;
+
+    final digitKeys = <LogicalKeyboardKey>[
+      LogicalKeyboardKey.digit1,
+      LogicalKeyboardKey.digit2,
+      LogicalKeyboardKey.digit3,
+      LogicalKeyboardKey.digit4,
+      LogicalKeyboardKey.digit5,
+    ];
+
+    for (int i = 0; i < selectedColors.length && i < digitKeys.length; i++) {
+      final key = Keybinding([
+        KeyCode.from(digitKeys[i]),
+      ], inclusive: true);
+
+      _colorKeybindings.add(key);
+
+      Keybinder.bind(key, () {
+        if (widget.currentTool is! Pen &&
+          widget.currentTool is! Pencil &&
+          widget.currentTool is! Highlighter) return;
+        if (widget.readOnly) return;
+        widget.setColor(selectedColors[i]);
+      });
+    }
   }
 
   void _removeKeybindings() {
@@ -148,6 +210,10 @@ class _ToolbarState extends State<Toolbar> {
     if (_ctrlShiftS != null) Keybinder.remove(_ctrlShiftS!);
     if (_f11 != null) Keybinder.remove(_f11!);
     if (_ctrlV != null) Keybinder.remove(_ctrlV!);
+    for (final kb in _colorKeybindings) {
+      Keybinder.remove(kb);
+    }
+    _colorKeybindings.clear();
   }
 
   void toggleEraser() {
