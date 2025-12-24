@@ -104,20 +104,22 @@ class _ToolbarState extends State<Toolbar> {
   void _setState() => setState(() {});
 
   Keybinding? _ctrlF;
-  Keybinding? _ctrlE;
+  Keybinding? _e;
   Keybinding? _ctrlC;
   Keybinding? _ctrlShiftS;
   Keybinding? _f11;
   Keybinding? _ctrlV;
+  Keybinding? _z;
+  Keybinding? _s;
+  Keybinding? _p;
   final List<Keybinding> _colorKeybindings = [];
   void _assignKeybindings() {
     _ctrlF = Keybinding([
       KeyCode.ctrl,
       KeyCode.from(LogicalKeyboardKey.keyF),
     ], inclusive: true);
-    _ctrlE = Keybinding([
-      KeyCode.ctrl,
-      KeyCode.from(LogicalKeyboardKey.keyE),
+    _e = Keybinding(
+      [KeyCode.from(LogicalKeyboardKey.keyE),
     ], inclusive: true);
     _ctrlC = Keybinding([
       KeyCode.ctrl,
@@ -133,13 +135,38 @@ class _ToolbarState extends State<Toolbar> {
       KeyCode.ctrl,
       KeyCode.from(LogicalKeyboardKey.keyV),
     ], inclusive: true);
+    _z = Keybinding(
+      [KeyCode.from(LogicalKeyboardKey.keyZ),
+    ], inclusive: true);
+    _s = Keybinding(
+      [KeyCode.from(LogicalKeyboardKey.keyS),
+    ], inclusive: true);
+    _p = Keybinding(
+      [KeyCode.from(LogicalKeyboardKey.keyP),
+    ], inclusive: true);
+
 
     Keybinder.bind(_ctrlF!, widget.toggleFingerDrawing);
-    Keybinder.bind(_ctrlE!, toggleEraser);
+    Keybinder.bind(_e!, toggleEraser);
     Keybinder.bind(_ctrlC!, toggleColorOptions);
     Keybinder.bind(_ctrlShiftS!, toggleExportBar);
     Keybinder.bind(_f11!, toggleFullscreen);
     Keybinder.bind(_ctrlV!, widget.paste);
+    Keybinder.bind(_z!, () {
+      if (widget.readOnly) return;
+      if (!widget.isUndoPossible) return;
+      widget.undo();
+    });
+    Keybinder.bind(_s!, () {
+      if (widget.readOnly) return;
+      toolOptionsType.value = ToolOptions.hide;
+      widget.setTool(Select.currentSelect);
+    });
+    Keybinder.bind(_p!, () {
+      if (widget.readOnly) return;
+      toolOptionsType.value = ToolOptions.hide;
+      widget.setTool(Pen.currentPen);
+    });
     _assignColorKeybindings();
   }
 
@@ -205,11 +232,14 @@ class _ToolbarState extends State<Toolbar> {
 
   void _removeKeybindings() {
     if (_ctrlF != null) Keybinder.remove(_ctrlF!);
-    if (_ctrlE != null) Keybinder.remove(_ctrlE!);
+    if (_e != null) Keybinder.remove(_e!);
     if (_ctrlC != null) Keybinder.remove(_ctrlC!);
     if (_ctrlShiftS != null) Keybinder.remove(_ctrlShiftS!);
     if (_f11 != null) Keybinder.remove(_f11!);
     if (_ctrlV != null) Keybinder.remove(_ctrlV!);
+    if (_z != null) Keybinder.remove(_z!);
+    if (_s != null) Keybinder.remove(_s!);
+    if (_p != null) Keybinder.remove(_p!);
     for (final kb in _colorKeybindings) {
       Keybinder.remove(kb);
     }
